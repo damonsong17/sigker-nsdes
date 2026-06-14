@@ -17,12 +17,19 @@ hard-require pySigLib until a kernel is actually constructed.
 
 
 def _static_kernel(kernel_type, sigma):
-    """Build a pySigLib static kernel matching sigker-nsdes' choices."""
+    """Build a pySigLib static kernel matching sigker-nsdes' choices.
+
+    Prefer the torch_api namespace if it defines the kernel classes (to stay
+    consistent with the autograd-aware torch_api.sig_kernel_gram); fall back to
+    the top-level pysiglib classes otherwise.
+    """
     import pysiglib
+    from pysiglib import torch_api
+    src = torch_api if hasattr(torch_api, "RBFKernel") else pysiglib
     if kernel_type.lower() == "rbf":
-        return pysiglib.RBFKernel(sigma=sigma)
+        return src.RBFKernel(sigma=sigma)
     # default / "linear"
-    return pysiglib.LinearKernel()
+    return src.LinearKernel()
 
 
 class PySigKernel:
@@ -38,10 +45,12 @@ class PySigKernel:
         self.dyadic_order = dyadic_order
 
     def compute_Gram(self, X, Y, sym=False, max_batch=128):
-        # lead_lag=False to match sigkernel's default (time augmentation, if any,
-        # is applied upstream in the path transforms).
-        import pysiglib
-        return pysiglib.sig_kernel_gram(
+        # IMPORTANT: call via pysiglib.torch_api so the Gram is autograd-differentiable.
+        # The top-level pysiglib.sig_kernel_gram returns a DETACHED tensor (no grad_fn),
+        # which breaks training (RuntimeError: ... does not require grad).
+        # lead_lag=False matches sigkernel's default (time-aug, if any, is upstream).
+        from pysiglib import torch_api
+        return torch_api.sig_kernel_gram(
             X, Y,
             dyadic_order=self.dyadic_order,
             static_kernel=self.static_kernel,
