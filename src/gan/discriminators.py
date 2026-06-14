@@ -1,11 +1,14 @@
 from typing import Callable, Iterable, Union, List
 
+import os
+
 import sigkernel
 import torchcde
 import torch
 import signatory
 
 from src.gan.base import MLP
+from src.gan.pysiglib_kernel import PySigKernel, _static_kernel
 
 
 class SummedKernel(object):
@@ -28,13 +31,24 @@ class SummedKernel(object):
 
 
 def get_kernel(kernel_type, dyadic_order, sigma=1.):
-    if kernel_type.lower() == "rbf":
-        static_kernel = sigkernel.RBFKernel(sigma=sigma)
-    else:
-        # elif kernel_type.lower() == "linear":
-        static_kernel = sigkernel.LinearKernel()
+    """Build the signature kernel.
 
-    return sigkernel.SigKernel(static_kernel=static_kernel, dyadic_order=dyadic_order)
+    Backend selectable via env var SIGKER_BACKEND in {"pysiglib" (default),
+    "sigkernel"} for parity testing / fallback. Default is the pySigLib backend
+    (exact, fast signature-kernel gradients; no 1024 thread cap).
+    """
+    backend = os.environ.get("SIGKER_BACKEND", "pysiglib").lower()
+
+    if backend == "sigkernel":
+        if kernel_type.lower() == "rbf":
+            static_kernel = sigkernel.RBFKernel(sigma=sigma)
+        else:
+            # elif kernel_type.lower() == "linear":
+            static_kernel = sigkernel.LinearKernel()
+        return sigkernel.SigKernel(static_kernel=static_kernel, dyadic_order=dyadic_order)
+
+    # default: pySigLib-backed drop-in
+    return PySigKernel(_static_kernel(kernel_type, sigma), dyadic_order)
 
 
 def initialise_signature_kernel(**kwargs) -> Union[sigkernel.SigKernel, SummedKernel]:

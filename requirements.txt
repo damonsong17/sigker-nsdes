@@ -1,11 +1,27 @@
-torch==1.9.0+cu111
-torchcde~=0.2.5
-numpy~=1.24.3
-pandas~=2.0.1
-scipy~=1.10.1
-tqdm~=4.65.0
-torchsde~=0.2.5
-signatory==1.2.6.1.9.0
-sigkernel~=0.0.1
-matplotlib~=3.7.1
-scikit-learn~=1.2.2
+# Modernized environment for sigker-nsdes with the pySigLib signature-kernel backend.
+# Replaces the original torch==1.9 / signatory stack.
+# The original pins are recoverable via:  git show HEAD:requirements.txt
+#
+# GPU note: install a CUDA-enabled torch for your platform (e.g. via the PyTorch
+# index URL) and use the pysiglib[cuda] extra for GPU signature kernels. On Colab,
+# torch + CUDA is already provided by the runtime.
+#
+# signatory is intentionally DROPPED: it is hard-locked to torch 1.9 and is only
+# used by TruncatedDiscriminator, which the pySigLib path does not need.
+
+torch>=2.1
+torchcde>=0.2.5
+torchsde>=0.2.5
+pysiglib[cuda]>=0.2.0
+
+numpy>=1.24
+pandas>=2.0
+scipy>=1.10
+scikit-learn>=1.2
+matplotlib>=3.7
+tqdm>=4.65
+
+# Kept for the parity gate (tests/parity_pysiglib.py) and the
+# SIGKER_BACKEND=sigkernel fallback in get_kernel(). Remove once parity is confirmed
+# and you no longer need the fallback.
+sigkernel
