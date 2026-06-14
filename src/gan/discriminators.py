@@ -5,7 +5,10 @@ import os
 import sigkernel
 import torchcde
 import torch
-import signatory
+try:
+    import signatory  # optional: only used by TruncatedDiscriminator (torch<=1.9)
+except ImportError:
+    signatory = None
 
 from src.gan.base import MLP
 from src.gan.pysiglib_kernel import PySigKernel, _static_kernel

@@ -24,4 +24,5 @@ tqdm>=4.65
 # Kept for the parity gate (tests/parity_pysiglib.py) and the
 # SIGKER_BACKEND=sigkernel fallback in get_kernel(). Remove once parity is confirmed
 # and you no longer need the fallback.
-sigkernel
+# NOTE: sigkernel is NOT on PyPI -- it must be installed from git.
+sigkernel @ git+https://github.com/crispitagorico/sigkernel.git

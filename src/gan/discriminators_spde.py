@@ -3,7 +3,10 @@ from typing import Callable, Iterable, Union, List
 import sigkernel
 import torchcde
 import torch
-import signatory
+try:
+    import signatory  # optional (torch<=1.9); not required by the pySigLib path
+except ImportError:
+    signatory = None
 
 from src.gan.base import MLP
 from src.gan.discriminators import KernelDiscriminator

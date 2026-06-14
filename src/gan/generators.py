@@ -1,7 +1,10 @@
 import torch
 import torchsde
 import torchcde
-import signatory
+try:
+    import signatory  # optional: only used by signatory-based conditional generators (torch<=1.9)
+except ImportError:
+    signatory = None
 
 from src.gan.base import MLP
 
